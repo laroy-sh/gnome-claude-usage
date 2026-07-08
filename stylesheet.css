@@ -1,0 +1,30 @@
+.claude-usage-warning {
+  color: #ff9f0a;
+}
+
+.claude-usage-critical {
+  color: #ff453a;
+}
+
+.claude-usage-error {
+  color: #ff9f0a;
+}
+
+.claude-usage-limit {
+  min-width: 280px;
+  spacing: 6px;
+  padding: 6px 0;
+}
+
+.claude-usage-title {
+  font-weight: bold;
+}
+
+/* Dimming is done via actor opacity so it follows the theme's text color */
+.claude-usage-dim {
+  font-size: 0.9em;
+}
+
+.claude-usage-bar {
+  -barlevel-height: 6px;
+}
