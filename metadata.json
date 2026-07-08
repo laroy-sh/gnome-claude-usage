@@ -1,0 +1,6 @@
+{
+  "uuid": "claude-usage@laroy",
+  "name": "Claude Usage",
+  "description": "Shows Claude plan usage limits (session and weekly) in the top bar",
+  "shell-version": ["46"]
+}
