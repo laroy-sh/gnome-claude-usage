@@ -1,6 +1,7 @@
 {
   "uuid": "claude-usage@laroy",
   "name": "Claude Usage",
-  "description": "Shows Claude plan usage limits (session and weekly) in the top bar",
-  "shell-version": ["46"]
+  "description": "Shows Claude plan usage limits (session and weekly) in the top bar. Polls the Anthropic usage API with the OAuth token from your local Claude Code install (read-only) — requires Claude Code to be logged in.",
+  "shell-version": ["46"],
+  "url": "https://github.com/laroy-sh/gnome-claude-usage"
 }
