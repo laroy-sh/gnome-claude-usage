@@ -54,6 +54,20 @@ function resetText(limit) {
     return `Resets ${resets.to_local().format('%a %-H:%M')}`;
 }
 
+function shortCountdown(limit) {
+    const resets = limit.resets_at
+        ? GLib.DateTime.new_from_iso8601(limit.resets_at, null) : null;
+    if (!resets)
+        return null;
+    const secs = resets.difference(GLib.DateTime.new_now_utc()) / GLib.TIME_SPAN_SECOND;
+    if (secs <= 0)
+        return null;
+    const totalMin = Math.ceil(secs / 60);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
 function normalizeLimits(data) {
     if (Array.isArray(data.limits) && data.limits.length > 0)
         return data.limits;
@@ -80,10 +94,14 @@ export default class ClaudeUsageExtension extends Extension {
     enable() {
         this._cancellable = new Gio.Cancellable();
         this._session = new Soup.Session({user_agent: USER_AGENT});
+        this._settings = this.getSettings();
+        this._settingsChangedId = this._settings.connect('changed', () => this._updatePanel());
         this._lastAttemptMs = 0;
         this._lastUpdated = null;
         this._haveData = false;
         this._fetching = false;
+        this._limits = null;
+        this._tickerId = null;
 
         this._indicator = new PanelMenu.Button(0.0, 'Claude Usage', false);
         this._panelLabel = new St.Label({
@@ -132,6 +150,14 @@ export default class ClaudeUsageExtension extends Extension {
             GLib.Source.remove(this._timerId);
             this._timerId = null;
         }
+        if (this._tickerId) {
+            GLib.Source.remove(this._tickerId);
+            this._tickerId = null;
+        }
+        this._settings.disconnect(this._settingsChangedId);
+        this._settingsChangedId = null;
+        this._settings = null;
+        this._limits = null;
         this._cancellable.cancel();
         this._cancellable = null;
         this._session.abort();
@@ -226,10 +252,41 @@ export default class ClaudeUsageExtension extends Extension {
             this._limitsSection.addMenuItem(item);
         }
 
-        const max = Math.max(0, ...limits.map(l => l.percent ?? 0));
-        this._panelLabel.text = `✻ ${Math.round(max)}%`;
-        this._setPanelSeverity(max >= 95 ? 'critical' : max >= 80 ? 'warning' : null);
+        this._limits = limits;
+        this._updatePanel();
         this._updatedItem.label.text = `Last updated: ${this._lastUpdated.format('%H:%M')}`;
+    }
+
+    // Renders the panel label from cached limits; returns whether a countdown is showing
+    _updatePanel() {
+        if (!this._limits?.length)
+            return false;
+        const session = this._limits.find(l => l.kind === 'session');
+        const shown = this._settings.get_boolean('panel-show-session') && session
+            ? session
+            : this._limits.reduce((a, b) => ((b.percent ?? 0) >= (a.percent ?? 0) ? b : a));
+        const percent = shown.percent ?? 0;
+        let text = `✻ ${Math.round(percent)}%`;
+        let counting = false;
+        if (percent >= 100 && this._settings.get_boolean('countdown-when-full')) {
+            const left = shortCountdown(shown);
+            if (left) {
+                text = `✻ ${left}`;
+                counting = true;
+            }
+        }
+        this._panelLabel.text = text;
+        this._setPanelSeverity(percent >= 95 ? 'critical' : percent >= 80 ? 'warning' : null);
+        // Tick once a minute while counting down so the label stays current between fetches
+        if (counting && !this._tickerId) {
+            this._tickerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60, () => {
+                if (this._updatePanel())
+                    return GLib.SOURCE_CONTINUE;
+                this._tickerId = null;
+                return GLib.SOURCE_REMOVE;
+            });
+        }
+        return counting;
     }
 
     _showError(message) {

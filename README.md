@@ -1,10 +1,15 @@
 # Claude Usage — GNOME Shell extension
 
 Shows your Claude plan usage limits in the GNOME top bar. The panel shows the
-highest utilization across all limits (`✻ 42%`), turning orange at 80% and red
-at 95%. Clicking it opens a popup with a bar per limit — current session,
-all-models weekly, and per-model weekly — each with its usage percentage and
-reset time, plus a manual refresh.
+current session utilization (`✻ 42%`), turning orange at 80% and red at 95%;
+when a limit is hit it counts down the time until reset (`✻ 1h 12m`) instead.
+Clicking it opens a popup with a bar per limit — current session, all-models
+weekly, and per-model weekly — each with its usage percentage and reset time,
+plus a manual refresh.
+
+Both behaviors are configurable in the extension preferences: the panel can
+show the highest limit instead of the session, and the countdown can be
+turned off.
 
 ## How it works
 
