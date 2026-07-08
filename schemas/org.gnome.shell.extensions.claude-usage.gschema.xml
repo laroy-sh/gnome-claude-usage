@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.claude-usage" path="/org/gnome/shell/extensions/claude-usage/">
+    <key name="panel-show-session" type="b">
+      <default>true</default>
+      <summary>Show session limit in the panel</summary>
+      <description>Show the current session percentage in the top bar instead of the highest limit.</description>
+    </key>
+    <key name="countdown-when-full" type="b">
+      <default>true</default>
+      <summary>Countdown when the limit is reached</summary>
+      <description>When the shown limit reaches 100%, display the time until it resets instead of the percentage.</description>
+    </key>
+  </schema>
+</schemalist>
